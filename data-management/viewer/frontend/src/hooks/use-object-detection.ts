@@ -3,7 +3,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { clearDetections, getDetections, runDetection } from '@/api/detection'
 import { useDatasetStore, useEditDirtyState, useEpisodeStore } from '@/stores'
@@ -38,7 +38,7 @@ export function useObjectDetection() {
   const [needsRerun, setNeedsRerun] = useState(false)
 
   // Track edit dirty state to suggest re-run
-  useMemo(() => {
+  useEffect(() => {
     if (hasEdits) {
       setNeedsRerun(true)
     }

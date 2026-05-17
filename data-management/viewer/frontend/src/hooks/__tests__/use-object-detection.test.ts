@@ -1,15 +1,5 @@
 /**
  * Tests for useObjectDetection hook.
- *
- * NOTE — Known bug (follow-up WI-01):
- *   The hook calls `setNeedsRerun(true)` inside a `useMemo` body when
- *   `hasEdits` becomes true. `useMemo` is for memoized values, not side
- *   effects; React may skip, batch, or re-run the body unpredictably.
- *   The intent is clearly an effect — `useEffect` is the correct primitive.
- *   In the current test environment the side effect happens to flip
- *   `needsRerun` to true on re-render, so the behavioral assertion passes
- *   today. The reliability concern remains — the fix (move to `useEffect`)
- *   is tracked in WI-01. Do NOT fix the hook here.
  */
 
 import { act, waitFor } from '@testing-library/react'
@@ -175,17 +165,7 @@ describe('useObjectDetection', () => {
     expect(result.current.availableClasses).toEqual([])
   })
 
-  // --- WI-01: anti-pattern (setState inside useMemo) ---------------------
-  // The hook places `setNeedsRerun(true)` inside a `useMemo` body. React
-  // does not guarantee the memo body runs (or runs only once) for a given
-  // dependency change, so the state update is unreliable in principle.
-  // The assertion below documents the *intended* post-fix behavior. It is
-  // skipped because the current hook cannot reliably satisfy it across
-  // environments, even though it happens to pass under happy-dom today.
-  // When WI-01 moves the side effect into `useEffect`, remove `.skip` and
-  // add a companion test asserting that re-rendering with hasEdits=false
-  // leaves needsRerun untouched.
-  it.skip('flips needsRerun to true when edits become dirty (WI-01)', async () => {
+  it('flips needsRerun to true when edits become dirty', async () => {
     storeState.isDirty = false
     const { result, rerender } = renderHookWithProviders(() => useObjectDetection())
     await waitFor(() => expect(result.current.data).toBeDefined())
