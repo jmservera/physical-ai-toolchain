@@ -253,9 +253,13 @@ module "conversion_pipeline" {
   datasets_container        = module.platform.datasets_container
 
   // Event Grid
-  should_enable_event_grid_dead_letter = var.conversion_pipeline_config.should_enable_event_grid_dead_letter
-  raw_blob_suffix_filters              = var.conversion_pipeline_config.raw_blob_suffix_filters
-  conversion_subscriber_url            = var.conversion_pipeline_config.conversion_subscriber_url
+  should_enable_event_grid_dead_letter       = var.conversion_pipeline_config.should_enable_event_grid_dead_letter
+  should_enable_immutability_policy          = var.conversion_pipeline_config.should_enable_immutability_policy
+  raw_immutability_period_in_days            = var.conversion_pipeline_config.raw_immutability_period_in_days
+  converted_immutability_period_in_days      = var.conversion_pipeline_config.converted_immutability_period_in_days
+  event_grid_dlq_immutability_period_in_days = var.conversion_pipeline_config.event_grid_dlq_immutability_period_in_days
+  raw_blob_suffix_filters                    = var.conversion_pipeline_config.raw_blob_suffix_filters
+  conversion_subscriber_url                  = var.conversion_pipeline_config.conversion_subscriber_url
 
   // Fabric
   should_create_fabric_capacity  = var.conversion_pipeline_config.should_create_fabric_capacity

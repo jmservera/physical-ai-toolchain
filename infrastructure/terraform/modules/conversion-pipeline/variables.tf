@@ -17,6 +17,45 @@ variable "should_enable_event_grid_dead_letter" {
   default     = true
 }
 
+variable "should_enable_immutability_policy" {
+  type        = bool
+  description = "Whether to apply time-based immutability policies to the platform datasets container and the Event Grid dead-letter container"
+  default     = true
+}
+
+variable "raw_immutability_period_in_days" {
+  type        = number
+  description = "Time-based immutability retention in days for raw data. Because raw/ and converted/ share the platform datasets container, the effective datasets-container policy uses the larger of the raw and converted values"
+  default     = 90
+
+  validation {
+    condition     = var.raw_immutability_period_in_days >= 1 && var.raw_immutability_period_in_days <= 146000
+    error_message = "raw_immutability_period_in_days must be between 1 and 146000."
+  }
+}
+
+variable "converted_immutability_period_in_days" {
+  type        = number
+  description = "Time-based immutability retention in days for converted data. Because raw/ and converted/ share the platform datasets container, the effective datasets-container policy uses the larger of the raw and converted values"
+  default     = 30
+
+  validation {
+    condition     = var.converted_immutability_period_in_days >= 1 && var.converted_immutability_period_in_days <= 146000
+    error_message = "converted_immutability_period_in_days must be between 1 and 146000."
+  }
+}
+
+variable "event_grid_dlq_immutability_period_in_days" {
+  type        = number
+  description = "Time-based immutability retention in days for the Event Grid dead-letter container"
+  default     = 14
+
+  validation {
+    condition     = var.event_grid_dlq_immutability_period_in_days >= 1 && var.event_grid_dlq_immutability_period_in_days <= 146000
+    error_message = "event_grid_dlq_immutability_period_in_days must be between 1 and 146000."
+  }
+}
+
 variable "raw_blob_suffix_filters" {
   type        = list(string)
   description = "Suffix filters used by the Event Grid subscription's advanced_filter.string_ends_with on the raw container"

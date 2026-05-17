@@ -92,6 +92,113 @@ run "dlq_disabled_skips_container" {
 }
 
 // ============================================================
+// Immutability Policies
+// ============================================================
+
+run "immutability_policies_created" {
+  command = plan
+
+  variables {
+    resource_prefix                            = run.setup.resource_prefix
+    environment                                = run.setup.environment
+    instance                                   = run.setup.instance
+    location                                   = run.setup.location
+    resource_group                             = run.setup.resource_group
+    data_lake_storage_account                  = run.setup.data_lake_storage_account
+    datasets_container                         = run.setup.datasets_container
+    should_enable_event_grid_dead_letter       = true
+    should_enable_immutability_policy          = true
+    raw_immutability_period_in_days            = 90
+    converted_immutability_period_in_days      = 30
+    event_grid_dlq_immutability_period_in_days = 14
+  }
+
+  assert {
+    condition     = length(azurerm_storage_container_immutability_policy.datasets) == 1
+    error_message = "Datasets container immutability policy must be created when immutability is enabled."
+  }
+
+  assert {
+    condition     = azurerm_storage_container_immutability_policy.datasets[0].storage_container_resource_manager_id == run.setup.datasets_container.id
+    error_message = "Datasets immutability policy must target the platform datasets container."
+  }
+
+  assert {
+    condition     = azurerm_storage_container_immutability_policy.datasets[0].immutability_period_in_days == 90
+    error_message = "Datasets immutability policy must use the longer raw/converted retention period."
+  }
+
+  assert {
+    condition     = length(azurerm_storage_container_immutability_policy.event_grid_dlq) == 1
+    error_message = "Dead-letter immutability policy must be created when DLQ and immutability are enabled."
+  }
+
+  assert {
+    condition     = azurerm_storage_container_immutability_policy.event_grid_dlq[0].immutability_period_in_days == 14
+    error_message = "Dead-letter immutability policy must use the configured DLQ retention period."
+  }
+}
+
+run "immutability_disabled_skips_policies" {
+  command = plan
+
+  variables {
+    resource_prefix                      = run.setup.resource_prefix
+    environment                          = run.setup.environment
+    instance                             = run.setup.instance
+    location                             = run.setup.location
+    resource_group                       = run.setup.resource_group
+    data_lake_storage_account            = run.setup.data_lake_storage_account
+    datasets_container                   = run.setup.datasets_container
+    should_enable_event_grid_dead_letter = true
+    should_enable_immutability_policy    = false
+  }
+
+  assert {
+    condition     = length(azurerm_storage_container_immutability_policy.datasets) == 0
+    error_message = "Datasets immutability policy must not be created when immutability is disabled."
+  }
+
+  assert {
+    condition     = length(azurerm_storage_container_immutability_policy.event_grid_dlq) == 0
+    error_message = "Dead-letter immutability policy must not be created when immutability is disabled."
+  }
+}
+
+run "immutability_with_dlq_disabled_skips_dlq_policy" {
+  command = plan
+
+  variables {
+    resource_prefix                      = run.setup.resource_prefix
+    environment                          = run.setup.environment
+    instance                             = run.setup.instance
+    location                             = run.setup.location
+    resource_group                       = run.setup.resource_group
+    data_lake_storage_account            = run.setup.data_lake_storage_account
+    datasets_container                   = run.setup.datasets_container
+    should_enable_event_grid_dead_letter = false
+    should_enable_immutability_policy    = true
+    raw_immutability_period_in_days      = 90
+    converted_immutability_period_in_days = 30
+  }
+
+  assert {
+    condition     = length(azurerm_storage_container_immutability_policy.datasets) == 1
+    error_message = "Datasets immutability policy must still be created when immutability is enabled and DLQ is disabled."
+  }
+
+  assert {
+    condition     = azurerm_storage_container_immutability_policy.datasets[0].immutability_period_in_days == 90
+    error_message = "Datasets immutability policy must still use the longer raw/converted retention period when DLQ is disabled."
+  }
+
+  assert {
+    condition     = length(azurerm_storage_container_immutability_policy.event_grid_dlq) == 0
+    error_message = "Dead-letter immutability policy must not be created when DLQ is disabled."
+  }
+}
+
+// ============================================================
 // Event Grid Filters
 // ============================================================
 
@@ -281,4 +388,21 @@ run "empty_suffix_filters_rejected" {
   }
 
   expect_failures = [var.raw_blob_suffix_filters]
+}
+
+run "invalid_raw_immutability_period_rejected" {
+  command = plan
+
+  variables {
+    resource_prefix                 = run.setup.resource_prefix
+    environment                     = run.setup.environment
+    instance                        = run.setup.instance
+    location                        = run.setup.location
+    resource_group                  = run.setup.resource_group
+    data_lake_storage_account       = run.setup.data_lake_storage_account
+    datasets_container              = run.setup.datasets_container
+    raw_immutability_period_in_days = 0
+  }
+
+  expect_failures = [var.raw_immutability_period_in_days]
 }

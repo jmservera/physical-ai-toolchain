@@ -574,14 +574,18 @@ variable "should_deploy_conversion_pipeline" {
 
 variable "conversion_pipeline_config" {
   type = object({
-    should_enable_event_grid_dead_letter = optional(bool, true)
-    raw_blob_suffix_filters              = optional(list(string), [".bag", ".bag.zst", ".mcap"])
-    conversion_subscriber_url            = optional(string, null)
-    should_create_fabric_capacity        = optional(bool, true)
-    should_create_fabric_workspace       = optional(bool, true)
-    fabric_capacity_sku                  = optional(string, "F2")
-    fabric_admin_members                 = optional(list(string), [])
-    fabric_workspace_sp_object_id        = optional(string, null)
+    should_enable_event_grid_dead_letter       = optional(bool, true)
+    should_enable_immutability_policy          = optional(bool, true)
+    raw_immutability_period_in_days            = optional(number, 90)
+    converted_immutability_period_in_days      = optional(number, 30)
+    event_grid_dlq_immutability_period_in_days = optional(number, 14)
+    raw_blob_suffix_filters                    = optional(list(string), [".bag", ".bag.zst", ".mcap"])
+    conversion_subscriber_url                  = optional(string, null)
+    should_create_fabric_capacity              = optional(bool, true)
+    should_create_fabric_workspace             = optional(bool, true)
+    fabric_capacity_sku                        = optional(string, "F2")
+    fabric_admin_members                       = optional(list(string), [])
+    fabric_workspace_sp_object_id              = optional(string, null)
   })
   description = "Conversion pipeline module configuration. Only consumed when should_deploy_conversion_pipeline is true"
   default     = {}
